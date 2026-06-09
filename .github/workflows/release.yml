@@ -26,7 +26,7 @@ jobs:
 
       - name: Package CRX
         run: |
-          npx crx3 . \
+          npx crx3 "$GITHUB_WORKSPACE" \
             --keyPath key.pem \
             --crxPath argo-rollup-helper-${{ steps.version.outputs.version }}.crx \
             --zipPath argo-rollup-helper-${{ steps.version.outputs.version }}.zip
