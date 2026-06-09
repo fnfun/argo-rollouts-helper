@@ -1,0 +1,31 @@
+name: Release Chrome Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from manifest
+        id: version
+        run: |
+          VERSION=$(jq -r .version manifest.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Package extension
+        run: |
+          zip -r argo-rollup-helper-${{ steps.version.outputs.version }}.zip \
+            manifest.json \
+            src/ \
+            icons/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.version.outputs.version }}
+          files: argo-rollup-helper-${{ steps.version.outputs.version }}.zip
