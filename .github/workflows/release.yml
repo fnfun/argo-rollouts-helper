@@ -11,21 +11,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Read version from manifest
         id: version
         run: |
           VERSION=$(jq -r .version manifest.json)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Package extension
+      - name: Write private key
+        run: echo "${{ secrets.CRX_PRIVATE_KEY }}" | base64 -d > key.pem
+
+      - name: Package CRX
         run: |
-          zip -r argo-rollup-helper-${{ steps.version.outputs.version }}.zip \
-            manifest.json \
-            src/ \
-            icons/
+          npx crx3 . \
+            --keyPath key.pem \
+            --crxPath argo-rollup-helper-${{ steps.version.outputs.version }}.crx \
+            --zipPath argo-rollup-helper-${{ steps.version.outputs.version }}.zip
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           name: v${{ steps.version.outputs.version }}
-          files: argo-rollup-helper-${{ steps.version.outputs.version }}.zip
+          files: |
+            argo-rollup-helper-${{ steps.version.outputs.version }}.crx
+            argo-rollup-helper-${{ steps.version.outputs.version }}.zip
