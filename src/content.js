@@ -32,15 +32,25 @@
     const banner = document.createElement('div');
     banner.id = 'argo-helper-banner';
     banner.innerHTML =
-      '<span class="argo-helper-icon" aria-hidden="true">⚠️</span>' +
-      '<span class="argo-helper-text">Argo Rollouts Helper</span>' +
-      '<label class="argo-helper-switch">' +
+      '<span class="argo-helper-mark" aria-hidden="true">' +
+      '  <svg viewBox="0 0 24 24" width="16" height="16" fill="none">' +
+      '    <path d="M4 5l7 7-7 7M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '  </svg>' +
+      '</span>' +
+      '<span class="argo-helper-brand">Argo Rollouts Helper</span>' +
+      '<label class="argo-helper-switch" title="切换 Promote Full 模式">' +
       '  <input type="checkbox" id="argo-helper-toggle" />' +
-      '  <span class="argo-helper-slider" aria-hidden="true"></span>' +
-      '  <span class="argo-helper-label">Promote Full 模式</span>' +
+      '  <span class="argo-helper-track" aria-hidden="true"></span>' +
+      '  <span class="argo-helper-label">Promote Full</span>' +
       '</label>' +
-      '<span class="argo-helper-warning">⚠️ 已开启 FULL PROMOTE,所有 Promote 操作将直接全量发布,跳过剩余 step!</span>' +
-      '<span class="argo-helper-hint">关闭时不干预请求</span>';
+      '<span class="argo-helper-warning">' +
+      '  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">' +
+      '    <path d="M12 3l9 16H3l9-16z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>' +
+      '    <path d="M12 10v4M12 16.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' +
+      '  </svg>' +
+      '  <b>FULL PROMOTE 已开启</b> — 所有 Promote 将直接全量发布，跳过剩余 step！' +
+      '</span>' +
+      '<span class="argo-helper-hint">已加载 · 关闭时不干预任何请求</span>';
 
     document.body.prepend(banner);
     document.body.classList.add('argo-helper-page');

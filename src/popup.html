@@ -6,44 +6,81 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <div class="popup-root">
-      <header class="popup-header">
-        <span class="popup-title">Argo Rollouts Helper</span>
-        <span class="popup-version">v0.1.0</span>
+    <div class="popup" id="popup">
+      <!-- Header -->
+      <header class="head">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M4 5l7 7-7 7M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <div class="head-text">
+          <span class="head-title">Argo Rollouts Helper</span>
+          <span class="head-sub">Promote Full 助手</span>
+        </div>
+        <div class="head-meta">
+          <span class="status-light" id="status-light" data-state="idle" title="状态">
+            <span class="dot"></span>
+            <span class="status-label" id="status-label">未生效</span>
+          </span>
+          <span class="version">v0.1.0</span>
+        </div>
       </header>
 
-      <section class="card">
-        <div class="row">
-          <span class="label">当前标签页</span>
-          <span class="value" id="current-url">-</span>
+      <!-- Primary control -->
+      <section class="card control" id="control">
+        <div class="control-top">
+          <div class="control-text">
+            <span class="control-title">Promote Full 模式</span>
+            <span class="control-desc">
+              拦截 <code>PUT /promote</code>，把 <code>full:false</code> 改写为 <code>full:true</code>
+            </span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="enable-toggle" />
+            <span class="track" aria-hidden="true"></span>
+          </label>
         </div>
-        <div class="row">
-          <span class="label">生效状态</span>
-          <span class="value" id="current-match">-</span>
+        <div class="danger-note" id="danger-note">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">
+            <path d="M12 3l9 16H3l9-16z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            <path d="M12 10v4M12 16.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <span>已武装 — 所有 Promote 将<b>直接全量发布</b>，跳过剩余 step</span>
         </div>
-        <label class="switch-row">
-          <input type="checkbox" id="enable-toggle" />
-          <span class="switch-slider"></span>
-          <span class="switch-text">Promote Full 模式（高危）</span>
-        </label>
-        <p class="warn" id="enable-warn">
-          ⚠️ 开启后所有 Promote 操作将直接全量发布，跳过剩余 step！
-        </p>
       </section>
 
-      <section class="card">
-        <div class="patterns-header">
-          <span class="label">生效 URL 模式</span>
-          <span class="hint">每行一个，支持 <code>*</code> 通配符</span>
+      <!-- Page status -->
+      <section class="card status-card">
+        <div class="srow">
+          <span class="skey">当前页面</span>
+          <span class="sval mono" id="current-url">—</span>
         </div>
-        <textarea id="patterns" rows="6" spellcheck="false" placeholder="https://argo-rollouts.example.com/*"></textarea>
-        <div class="actions">
-          <button id="add-current">添加当前页</button>
-          <button id="reset-default">恢复默认</button>
-          <button id="save" class="primary">保存</button>
+        <div class="srow">
+          <span class="skey">生效状态</span>
+          <span class="badge" id="current-match" data-state="unknown">—</span>
         </div>
-        <p class="hint" id="save-hint"></p>
       </section>
+
+      <!-- Advanced (collapsible) -->
+      <details class="adv" id="adv">
+        <summary>
+          <svg class="chev" viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>高级设置 · 生效 URL</span>
+        </summary>
+        <div class="adv-body">
+          <p class="adv-hint">每行一个，支持 <code>*</code> 通配符。修改后需刷新已打开页面。</p>
+          <textarea id="patterns" rows="4" spellcheck="false" placeholder="https://argo-rollouts.example.com/*"></textarea>
+          <div class="actions">
+            <button id="add-current" type="button">＋ 当前页</button>
+            <button id="reset-default" type="button">恢复默认</button>
+            <button id="save" type="button" class="primary">保存</button>
+          </div>
+          <p class="save-hint" id="save-hint"></p>
+        </div>
+      </details>
     </div>
     <script src="popup.js"></script>
   </body>

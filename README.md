@@ -10,8 +10,8 @@
 
 - 仅在用户配置的 URL 列表（默认预置 `https://argo-rollouts.example.com/*`）下生效，其它页面完全静默。
 - 在生效页面顶部插入醒目横幅：
-  - 关闭态：黄色提示条，提示扩展已加载，不干预任何请求。
-  - 开启态：红色闪烁条 + 警告文字，明确告知"FULL PROMOTE 已开启"。
+  - 关闭态：简洁白色/深色条（自动跟随系统主题），Argo 橙徽标，提示扩展已加载、不干预任何请求。
+  - 开启态：整条变红 + 脉冲动画 + 警告文字，明确告知"FULL PROMOTE 已开启"。
 - 拦截 `PUT /api/v1/rollouts/{namespace}/{name}/promote` 请求，重写请求体中的 `full` 字段。
 - 仅处理 JSON 字符串 body，非 JSON 直接放行。
 - 状态和配置通过 `chrome.storage.local` 持久化，多标签页同步。

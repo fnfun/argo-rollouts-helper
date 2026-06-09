@@ -33,15 +33,46 @@
     }
   }
 
-  function renderMatch(matched) {
-    const el = document.getElementById('current-match');
-    el.textContent = matched ? '✅ 已生效' : '⚠️ 当前页未在生效列表';
-    el.classList.toggle('matched', matched);
-    el.classList.toggle('unmatched', !matched);
+  const $ = (id) => document.getElementById(id);
+
+  function prettyUrl(url) {
+    if (!url) return '—';
+    try {
+      const u = new URL(url);
+      return u.host + (u.pathname === '/' ? '' : u.pathname);
+    } catch (_) {
+      return url;
+    }
+  }
+
+  // Reflect both the match status and the armed (enabled) status in the UI.
+  function render(matched, enabled) {
+    // match badge
+    const badge = $('current-match');
+    badge.textContent = matched ? '已生效' : '未在列表';
+    badge.dataset.state = matched ? 'matched' : 'unmatched';
+
+    // control card armed state
+    $('control').classList.toggle('armed', enabled);
+    $('enable-toggle').checked = enabled;
+
+    // header status light
+    const light = $('status-light');
+    const label = $('status-label');
+    if (!matched) {
+      light.dataset.state = 'idle';
+      label.textContent = '未生效';
+    } else if (enabled) {
+      light.dataset.state = 'armed';
+      label.textContent = 'FULL 已武装';
+    } else {
+      light.dataset.state = 'matched';
+      label.textContent = '已生效 · 安全';
+    }
   }
 
   function setHint(msg, isError) {
-    const hint = document.getElementById('save-hint');
+    const hint = $('save-hint');
     hint.textContent = msg || '';
     hint.classList.toggle('error', !!isError);
   }
@@ -52,18 +83,32 @@
       getActiveTab(),
     ]);
 
-    const patterns = Array.isArray(store[KEY_PATTERNS]) ? store[KEY_PATTERNS] : [];
+    let patterns = Array.isArray(store[KEY_PATTERNS]) ? store[KEY_PATTERNS] : [];
     const enabled = !!store[KEY_ENABLED];
 
-    document.getElementById('patterns').value = patterns.join('\n');
-    document.getElementById('enable-toggle').checked = enabled;
+    $('patterns').value = patterns.join('\n');
 
-    const tabUrl = tab && tab.url ? tab.url : '(无活动标签页)';
-    document.getElementById('current-url').textContent = tabUrl;
-    const matched = patterns.some((p) => urlMatches(tabUrl, p));
-    renderMatch(matched);
+    const tabUrl = tab && tab.url ? tab.url : '';
+    $('current-url').textContent = tabUrl ? prettyUrl(tabUrl) : '(无活动标签页)';
+    $('current-url').title = tabUrl;
 
-    document.getElementById('add-current').addEventListener('click', () => {
+    let matched = patterns.some((p) => urlMatches(tabUrl, p));
+    render(matched, enabled);
+
+    // Open advanced automatically if nothing is configured yet.
+    if (patterns.length === 0) $('adv').open = true;
+
+    $('enable-toggle').addEventListener('change', async (e) => {
+      const next = e.target.checked;
+      render(matched, next);
+      try {
+        await chrome.storage.local.set({ [KEY_ENABLED]: next });
+      } catch (_) {
+        setHint('开关状态保存失败', true);
+      }
+    });
+
+    $('add-current').addEventListener('click', () => {
       if (!tab || !tab.url) {
         setHint('无法读取当前标签页 URL', true);
         return;
@@ -75,7 +120,7 @@
           return;
         }
         const pattern = `${u.protocol}//${u.host}/*`;
-        const ta = document.getElementById('patterns');
+        const ta = $('patterns');
         const cur = parseList(ta.value);
         if (cur.includes(pattern)) {
           setHint('该模式已存在');
@@ -88,8 +133,8 @@
       }
     });
 
-    document.getElementById('reset-default').addEventListener('click', () => {
-      const ta = document.getElementById('patterns');
+    $('reset-default').addEventListener('click', () => {
+      const ta = $('patterns');
       const cur = parseList(ta.value);
       if (!cur.includes(DEFAULT_PATTERN)) {
         ta.value = [...cur, DEFAULT_PATTERN].join('\n');
@@ -99,21 +144,13 @@
       }
     });
 
-    document.getElementById('enable-toggle').addEventListener('change', async (e) => {
+    $('save').addEventListener('click', async () => {
+      patterns = parseList($('patterns').value);
       try {
-        await chrome.storage.local.set({ [KEY_ENABLED]: e.target.checked });
-      } catch (err) {
-        setHint('开关状态保存失败', true);
-      }
-    });
-
-    document.getElementById('save').addEventListener('click', async () => {
-      const list = parseList(document.getElementById('patterns').value);
-      try {
-        await chrome.storage.local.set({ [KEY_PATTERNS]: list });
-        const matchedNow = list.some((p) => urlMatches(tabUrl, p));
-        renderMatch(matchedNow);
-        setHint('已保存。已打开的页面需刷新才能生效。');
+        await chrome.storage.local.set({ [KEY_PATTERNS]: patterns });
+        matched = patterns.some((p) => urlMatches(tabUrl, p));
+        render(matched, $('enable-toggle').checked);
+        setHint('已保存 · 已打开的页面需刷新才能生效');
       } catch (err) {
         setHint('保存失败：' + (err && err.message), true);
       }
