@@ -34,10 +34,12 @@ jobs:
             --zipPath argo-rollup-helper-${{ steps.version.outputs.version }}.zip
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: v${{ steps.version.outputs.version }}
-          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          files: |
-            argo-rollup-helper-${{ steps.version.outputs.version }}.crx
-            argo-rollup-helper-${{ steps.version.outputs.version }}.zip
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --repo "$GITHUB_REPOSITORY" \
+            "argo-rollup-helper-${VERSION}.crx" \
+            "argo-rollup-helper-${VERSION}.zip"
