@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Argo Rollouts Promote Full Helper",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "在 Argo Rollouts UI 中提供 Promote Full 开关，拦截 promote 请求把 full:false 改为 full:true；生效 URL 可配置。",
   "permissions": ["storage"],
   "host_permissions": ["<all_urls>"],
