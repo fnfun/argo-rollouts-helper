@@ -1,70 +1,72 @@
 # Argo Rollouts Promote Full Helper
 
-一个 Chrome 扩展，在 Argo Rollouts UI 中提供一键 **Promote Full** 模式：开关开启时，自动把 `PUT /api/v1/rollouts/{ns}/{name}/promote` 请求体里的 `{"full": false}` 改为 `{"full": true}`，等价于命令行的 `kubectl argo rollouts promote --full`。
+> [中文文档](README_zh.md)
 
-⚠️ **Full promote 会跳过所有剩余 step 直接全量发布，是高危操作。** 横幅在开关开启时会变红闪烁，请谨慎使用。
+A Chrome extension that adds a one-click **Promote Full** toggle to the Argo Rollouts UI. When enabled, it intercepts `PUT /api/v1/rollouts/{ns}/{name}/promote` requests and rewrites the body from `{"full": false}` to `{"full": true}` — equivalent to running `kubectl argo rollouts promote --full`.
+
+⚠️ **Full promote skips all remaining steps and releases immediately. Use with caution.** The banner turns red and pulses when the toggle is on.
 
 ---
 
-## 功能
+## Features
 
-- 仅在用户配置的 URL 列表（默认预置 `https://argo-rollouts.example.com/*`）下生效，其它页面完全静默。
-- 在生效页面顶部插入醒目横幅：
-  - 关闭态：简洁白色/深色条（自动跟随系统主题），Argo 橙徽标，提示扩展已加载、不干预任何请求。
-  - 开启态：整条变红 + 脉冲动画 + 警告文字，明确告知"FULL PROMOTE 已开启"。
-- 拦截 `PUT /api/v1/rollouts/{namespace}/{name}/promote` 请求，重写请求体中的 `full` 字段。
-- 仅处理 JSON 字符串 body，非 JSON 直接放行。
-- 状态和配置通过 `chrome.storage.local` 持久化，多标签页同步。
-- 提供扩展图标 popup，用于管理生效 URL 列表、查看当前页是否生效、快速切换开关。
+- Only activates on URLs in the user-configured allowlist (default: `https://argo-rollouts.example.com/*`). Silent on all other pages.
+- Injects a prominent banner at the top of active pages:
+  - **Off state**: clean white/dark bar (follows system theme), Argo orange logo, indicates the extension is loaded and not modifying any requests.
+  - **On state**: entire bar turns red with a pulse animation and a warning message confirming "FULL PROMOTE ENABLED".
+- Intercepts `PUT /api/v1/rollouts/{namespace}/{name}/promote` requests and rewrites the `full` field in the request body.
+- Only processes JSON string bodies; non-JSON bodies are passed through unmodified.
+- State and configuration are persisted via `chrome.storage.local` and synced across tabs.
+- Provides an extension popup for managing the URL allowlist, checking whether the current page is active, and toggling the switch.
 
-## 安装
+## Installation
 
-1. 打开 Chrome → `chrome://extensions/`
-2. 右上角打开 **开发者模式**
-3. 点击 **加载已解压的扩展程序**，选中本目录
-4. 扩展加载完成后，点击工具栏上的扩展图标打开 popup：
-   - 点 **恢复默认** 把 Argo 默认 URL 加入列表
-   - 点 **保存**
-5. 刷新 https://argo-rollouts.example.com/ 即可看到顶部横幅
+1. Open Chrome and navigate to `chrome://extensions/`
+2. Enable **Developer mode** (top-right toggle)
+3. Click **Load unpacked** and select this directory
+4. After the extension loads, click the toolbar icon to open the popup:
+   - Click **Restore defaults** to add the default Argo URL to the list
+   - Click **Save**
+5. Refresh `https://argo-rollouts.example.com/` — the banner should appear at the top
 
-## 使用
+## Usage
 
-- **切换 Promote Full**：直接点击页面顶部横幅上的开关，或在扩展 popup 里切换。两处状态实时同步。
-- **添加其他 URL**（如内部 staging 环境）：popup 里点 **添加当前页** → **保存** → 刷新页面。
-- **关闭后不留痕**：关闭开关后，所有 promote 请求恢复 Argo 默认行为，扩展不修改任何请求。
+- **Toggle Promote Full**: click the switch in the banner at the top of the page, or use the toggle in the extension popup. Both are synced in real time.
+- **Add other URLs** (e.g. an internal staging environment): in the popup, click **Add current page** → **Save** → refresh the page.
+- **No side effects when off**: with the toggle off, all promote requests use Argo's default behavior and the extension does not modify any requests.
 
-## 验证
+## Verification
 
-打开 DevTools Network 面板，触发 Argo UI 的 `Promote` 按钮：
+Open the DevTools Network panel and trigger the `Promote` button in the Argo UI:
 
-| 开关状态 | Request Payload |
+| Toggle state | Request payload |
 | --- | --- |
-| 关闭 | `{"full":false}` |
-| 开启 | `{"full":true}` |
+| Off | `{"full":false}` |
+| On | `{"full":true}` |
 
-也可在 Console 直接测试：
+You can also test directly in the Console:
 
 ```js
 fetch('/api/v1/rollouts/foo/bar/promote', { method: 'PUT', body: '{"full":false}' });
 ```
 
-开关开启时 Network 面板里这条请求的 payload 会被改成 `{"full":true}`。
+With the toggle on, the payload for this request in the Network panel will be rewritten to `{"full":true}`.
 
-## 工程结构
+## Project Structure
 
 ```
-manifest.json          MV3 清单
+manifest.json          MV3 manifest
 src/
-  content.js           隔离世界：URL 守门 + 横幅 UI + 状态同步
-  inject.js            页面主世界：覆盖 fetch / XMLHttpRequest
-  banner.css           横幅样式（含闪烁动画）
-  popup.html/js/css    扩展图标 popup（配置 URL + 快捷开关）
-icons/                 16/48/128 占位图标
+  content.js           Isolated world: URL gating + banner UI + state sync
+  inject.js            Main world: overrides fetch / XMLHttpRequest
+  banner.css           Banner styles (including pulse animation)
+  popup.html/js/css    Extension popup (URL allowlist + quick toggle)
+icons/                 16/48/128 placeholder icons
 ```
 
-## 已知限制 / 注意事项
+## Known Limitations
 
-- 修改 URL 模式配置后，**已经打开的页面不会自动重新注入或卸载**，需要手动刷新页面才能生效（popup 保存时会提示）。
-- 扩展 `host_permissions` 申请了 `<all_urls>`（安装时 Chrome 会显示"读取所有网站数据"），但 content script 第一行就读 storage 判断 URL 不匹配立即 return，对非配置页面零副作用。
-- 仅处理 JSON 字符串 body。当前 Argo UI 使用 JSON 提交 promote，无需处理 FormData / Blob。
-- API 字段 `full` 硬编码在 inject.js；若 Argo 后端字段变化需手动更新。
+- After changing the URL pattern configuration, **already-open pages are not automatically re-injected or unloaded** — you must manually refresh for changes to take effect (the popup shows a reminder when saving).
+- The extension requests `<all_urls>` in `host_permissions` (Chrome shows "Read and change all your data on all websites" at install time), but the content script checks storage on the very first line and returns immediately if the current URL doesn't match — zero side effects on non-configured pages.
+- Only JSON string bodies are processed. The current Argo UI submits promote requests as JSON, so FormData / Blob handling is not needed.
+- The `full` field is hardcoded in `inject.js`. If the Argo backend field name changes, `inject.js` must be updated manually.
